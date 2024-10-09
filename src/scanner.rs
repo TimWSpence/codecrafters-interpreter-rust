@@ -59,13 +59,13 @@ impl fmt::Display for TokenType {
             TokenType::RightParen => write!(f, "RIGHT_PAREN"),
             TokenType::LeftBrace => write!(f, "LEFT_BRACE"),
             TokenType::RightBrace => write!(f, "RIGHT_BRACE"),
-            TokenType::Comma => todo!(),
-            TokenType::Dot => todo!(),
-            TokenType::Minus => todo!(),
-            TokenType::Plus => todo!(),
-            TokenType::SemiColon => todo!(),
+            TokenType::Comma => write!(f, ","),
+            TokenType::Dot => write!(f, "."),
+            TokenType::Minus => write!(f, "-"),
+            TokenType::Plus => write!(f, "+"),
+            TokenType::SemiColon => write!(f, ";"),
             TokenType::Slash => todo!(),
-            TokenType::Star => todo!(),
+            TokenType::Star => write!(f, "*"),
             TokenType::Bang => todo!(),
             TokenType::BangEqual => todo!(),
             TokenType::Equal => todo!(),
@@ -158,6 +158,12 @@ pub fn scan(input: &str) -> Result<Vec<Token>> {
             ')' => add_token(TokenType::RightParen, ")", None, line),
             '{' => add_token(TokenType::LeftBrace, "{", None, line),
             '}' => add_token(TokenType::RightBrace, "}", None, line),
+            ',' => add_token(TokenType::Comma, ",", None, line),
+            '.' => add_token(TokenType::Dot, ".", None, line),
+            '-' => add_token(TokenType::Minus, "-", None, line),
+            '+' => add_token(TokenType::Plus, "+", None, line),
+            ';' => add_token(TokenType::SemiColon, ";", None, line),
+            '*' => add_token(TokenType::Star, "*", None, line),
             '\n' => line += 1,
             _ => {}
         }
@@ -228,6 +234,54 @@ mod tests {
         assert_eq!(
             scan("}").unwrap(),
             vec![token(TokenType::RightBrace, "}", None), eof()]
+        )
+    }
+
+    #[test]
+    fn comma() {
+        assert_eq!(
+            scan(",").unwrap(),
+            vec![token(TokenType::Comma, ",", None), eof()]
+        )
+    }
+
+    #[test]
+    fn dot() {
+        assert_eq!(
+            scan(".").unwrap(),
+            vec![token(TokenType::Dot, ".", None), eof()]
+        )
+    }
+
+    #[test]
+    fn minus() {
+        assert_eq!(
+            scan("-").unwrap(),
+            vec![token(TokenType::Minus, "-", None), eof()]
+        )
+    }
+
+    #[test]
+    fn plus() {
+        assert_eq!(
+            scan("+").unwrap(),
+            vec![token(TokenType::Plus, "+", None), eof()]
+        )
+    }
+
+    #[test]
+    fn semicolon() {
+        assert_eq!(
+            scan(";").unwrap(),
+            vec![token(TokenType::SemiColon, ";", None), eof()]
+        )
+    }
+
+    #[test]
+    fn star() {
+        assert_eq!(
+            scan("*").unwrap(),
+            vec![token(TokenType::Star, "*", None), eof()]
         )
     }
 }
