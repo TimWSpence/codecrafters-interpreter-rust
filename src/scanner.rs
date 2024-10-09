@@ -153,7 +153,6 @@ pub fn scan(input: &str) -> Result<Vec<Token>> {
 
     let mut chars = input.chars();
     while let Some(c) = chars.next() {
-        println!("{}", c);
         match c {
             '(' => add_token(TokenType::LeftParen, "(", None, line),
             ')' => add_token(TokenType::RightParen, ")", None, line),
