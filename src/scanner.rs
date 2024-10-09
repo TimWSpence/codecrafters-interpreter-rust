@@ -93,7 +93,7 @@ impl fmt::Display for TokenType {
             TokenType::True => todo!(),
             TokenType::Var => todo!(),
             TokenType::While => todo!(),
-            TokenType::EOF => todo!(),
+            TokenType::EOF => write!(f, "EOF"),
         }
     }
 }
