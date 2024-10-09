@@ -52,6 +52,52 @@ pub enum TokenType {
     EOF,
 }
 
+impl fmt::Display for TokenType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            TokenType::LeftParen => write!(f, "LEFT_PAREN"),
+            TokenType::RightParen => write!(f, "RIGHT_PAREN"),
+            TokenType::LeftBrace => todo!(),
+            TokenType::RightBrace => todo!(),
+            TokenType::Comma => todo!(),
+            TokenType::Dot => todo!(),
+            TokenType::Minus => todo!(),
+            TokenType::Plus => todo!(),
+            TokenType::SemiColon => todo!(),
+            TokenType::Slash => todo!(),
+            TokenType::Star => todo!(),
+            TokenType::Bang => todo!(),
+            TokenType::BangEqual => todo!(),
+            TokenType::Equal => todo!(),
+            TokenType::EqualEqual => todo!(),
+            TokenType::Greater => todo!(),
+            TokenType::GreaterEqual => todo!(),
+            TokenType::Less => todo!(),
+            TokenType::LessEqual => todo!(),
+            TokenType::Identifier => todo!(),
+            TokenType::String => todo!(),
+            TokenType::Number => todo!(),
+            TokenType::And => todo!(),
+            TokenType::Class => todo!(),
+            TokenType::Else => todo!(),
+            TokenType::False => todo!(),
+            TokenType::Fun => todo!(),
+            TokenType::For => todo!(),
+            TokenType::If => todo!(),
+            TokenType::Nil => todo!(),
+            TokenType::Or => todo!(),
+            TokenType::Print => todo!(),
+            TokenType::Return => todo!(),
+            TokenType::Super => todo!(),
+            TokenType::This => todo!(),
+            TokenType::True => todo!(),
+            TokenType::Var => todo!(),
+            TokenType::While => todo!(),
+            TokenType::EOF => todo!(),
+        }
+    }
+}
+
 #[derive(Debug, PartialEq)]
 pub enum Literal {
     Str(String),
@@ -79,7 +125,7 @@ impl fmt::Display for Token {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "{:?} {} {}",
+            "{} {} {}",
             self.token_type,
             self.lexeme,
             match &self.literal {
@@ -107,10 +153,11 @@ pub fn scan(input: &str) -> Result<Vec<Token>> {
 
     let mut chars = input.chars();
     while let Some(c) = chars.next() {
+        println!("{}", c);
         match c {
-            '{' => add_token(TokenType::LeftParen, "{", None, line),
-            '}' => add_token(TokenType::RightParen, "}", None, line),
-            '\n' => line = line + 1,
+            '(' => add_token(TokenType::LeftParen, "(", None, line),
+            ')' => add_token(TokenType::RightParen, ")", None, line),
+            '\n' => line += 1,
             _ => {}
         }
     }
@@ -154,16 +201,16 @@ mod tests {
     #[test]
     fn left_paren() {
         assert_eq!(
-            scan("{").unwrap(),
-            vec![token(TokenType::LeftParen, "{", None), eof()]
+            scan("(").unwrap(),
+            vec![token(TokenType::LeftParen, "(", None), eof()]
         )
     }
 
     #[test]
     fn right_paren() {
         assert_eq!(
-            scan("}").unwrap(),
-            vec![token(TokenType::RightParen, "}", None), eof()]
+            scan(")").unwrap(),
+            vec![token(TokenType::RightParen, ")", None), eof()]
         )
     }
 }
