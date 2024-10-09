@@ -57,8 +57,8 @@ impl fmt::Display for TokenType {
         match self {
             TokenType::LeftParen => write!(f, "LEFT_PAREN"),
             TokenType::RightParen => write!(f, "RIGHT_PAREN"),
-            TokenType::LeftBrace => todo!(),
-            TokenType::RightBrace => todo!(),
+            TokenType::LeftBrace => write!(f, "LEFT_BRACE"),
+            TokenType::RightBrace => write!(f, "RIGHT_BRACE"),
             TokenType::Comma => todo!(),
             TokenType::Dot => todo!(),
             TokenType::Minus => todo!(),
@@ -156,6 +156,8 @@ pub fn scan(input: &str) -> Result<Vec<Token>> {
         match c {
             '(' => add_token(TokenType::LeftParen, "(", None, line),
             ')' => add_token(TokenType::RightParen, ")", None, line),
+            '{' => add_token(TokenType::LeftBrace, "{", None, line),
+            '}' => add_token(TokenType::RightBrace, "}", None, line),
             '\n' => line += 1,
             _ => {}
         }
@@ -210,6 +212,22 @@ mod tests {
         assert_eq!(
             scan(")").unwrap(),
             vec![token(TokenType::RightParen, ")", None), eof()]
+        )
+    }
+
+    #[test]
+    fn left_brace() {
+        assert_eq!(
+            scan("{").unwrap(),
+            vec![token(TokenType::LeftBrace, "{", None), eof()]
+        )
+    }
+
+    #[test]
+    fn right_brace() {
+        assert_eq!(
+            scan("}").unwrap(),
+            vec![token(TokenType::RightBrace, "}", None), eof()]
         )
     }
 }
