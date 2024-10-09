@@ -23,7 +23,7 @@ fn main() -> Result<()> {
                 String::new()
             });
 
-            let tokens = scanner::scan(input)?;
+            let tokens = scanner::scan(&input)?;
             for t in tokens {
                 println!("{}", t);
             }

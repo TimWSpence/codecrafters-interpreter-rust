@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Result};
 use std::fmt;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum TokenType {
     // Single character tokens
     LeftParen,
@@ -52,6 +52,7 @@ pub enum TokenType {
     EOF,
 }
 
+#[derive(Debug, PartialEq)]
 pub enum Literal {
     Str(String),
     Number(f64),
@@ -66,6 +67,7 @@ impl fmt::Display for Literal {
     }
 }
 
+#[derive(Debug, PartialEq)]
 pub struct Token {
     pub token_type: TokenType,
     pub lexeme: String,
@@ -89,11 +91,79 @@ impl fmt::Display for Token {
     }
 }
 
-pub fn scan(input: String) -> Result<Vec<Token>> {
-    Ok(vec![Token {
+pub fn scan(input: &str) -> Result<Vec<Token>> {
+    let mut line: u32 = 0;
+    let mut res = vec![];
+
+    let mut add_token =
+        |token_type: TokenType, lexeme: &str, literal: Option<Literal>, line: u32| {
+            res.push(Token {
+                token_type,
+                lexeme: lexeme.to_string(),
+                literal,
+                line,
+            });
+        };
+
+    let mut chars = input.chars();
+    while let Some(c) = chars.next() {
+        match c {
+            '{' => add_token(TokenType::LeftParen, "{", None, line),
+            '}' => add_token(TokenType::RightParen, "}", None, line),
+            '\n' => line = line + 1,
+            _ => {}
+        }
+    }
+
+    res.push(Token {
         token_type: TokenType::EOF,
         lexeme: "".to_string(),
         literal: None,
         line: 0,
-    }])
+    });
+    Ok(res)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn token(token_type: TokenType, lexeme: &str, literal: Option<Literal>) -> Token {
+        Token {
+            token_type,
+            lexeme: lexeme.to_string(),
+            literal,
+            line: 0,
+        }
+    }
+
+    fn eof() -> Token {
+        Token {
+            token_type: TokenType::EOF,
+            lexeme: "".to_string(),
+            literal: None,
+            line: 0,
+        }
+    }
+
+    #[test]
+    fn empty_string() {
+        assert_eq!(scan("").unwrap(), vec![eof()])
+    }
+
+    #[test]
+    fn left_paren() {
+        assert_eq!(
+            scan("{").unwrap(),
+            vec![token(TokenType::LeftParen, "{", None), eof()]
+        )
+    }
+
+    #[test]
+    fn right_paren() {
+        assert_eq!(
+            scan("}").unwrap(),
+            vec![token(TokenType::RightParen, "}", None), eof()]
+        )
+    }
 }
