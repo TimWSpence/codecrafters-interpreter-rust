@@ -168,7 +168,7 @@ pub fn scan(input: &str) -> Result<Vec<Token>, Vec<Token>> {
             '\n' => line += 1,
             c => {
                 error = true;
-                println!("[Line {}] Error: Unexpected character {}", line, c);
+                println!("[line {}] Error: Unexpected character: {}", line, c);
             }
         }
     }
