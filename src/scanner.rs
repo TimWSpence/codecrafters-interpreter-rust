@@ -165,6 +165,13 @@ pub fn scan(input: &str) -> Result<Vec<Token>, Vec<Token>> {
             '+' => add_token(TokenType::Plus, "+", None, line),
             ';' => add_token(TokenType::SemiColon, ";", None, line),
             '*' => add_token(TokenType::Star, "*", None, line),
+            '!' => match chars.peek() {
+                Some('=') => {
+                    chars.next();
+                    add_token(TokenType::BangEqual, "!=", None, line)
+                }
+                _ => add_token(TokenType::Bang, "!", None, line),
+            },
             '=' => match chars.peek() {
                 Some('=') => {
                     chars.next();
@@ -359,6 +366,22 @@ mod tests {
         assert_eq!(
             scan("<=").unwrap(),
             vec![token(TokenType::LessEqual, "<=", None), eof()]
+        )
+    }
+
+    #[test]
+    fn bang() {
+        assert_eq!(
+            scan("!").unwrap(),
+            vec![token(TokenType::Bang, "!", None), eof()]
+        )
+    }
+
+    #[test]
+    fn bang_equal() {
+        assert_eq!(
+            scan("!=").unwrap(),
+            vec![token(TokenType::BangEqual, "!=", None), eof()]
         )
     }
 }
