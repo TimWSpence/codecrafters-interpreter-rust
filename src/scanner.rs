@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Result};
+use anyhow::anyhow;
 use std::fmt;
 
 #[derive(Debug, PartialEq, Eq)]
@@ -137,9 +137,10 @@ impl fmt::Display for Token {
     }
 }
 
-pub fn scan(input: &str) -> Result<Vec<Token>> {
+pub fn scan(input: &str) -> Result<Vec<Token>, Vec<Token>> {
     let mut line: u32 = 1;
     let mut res = vec![];
+    let mut error = false;
 
     let mut add_token =
         |token_type: TokenType, lexeme: &str, literal: Option<Literal>, line: u32| {
@@ -165,7 +166,10 @@ pub fn scan(input: &str) -> Result<Vec<Token>> {
             ';' => add_token(TokenType::SemiColon, ";", None, line),
             '*' => add_token(TokenType::Star, "*", None, line),
             '\n' => line += 1,
-            c => println!("[Line {}] Error: Unexpected character {}", line, c),
+            c => {
+                error = true;
+                println!("[Line {}] Error: Unexpected character {}", line, c);
+            }
         }
     }
 
@@ -175,7 +179,11 @@ pub fn scan(input: &str) -> Result<Vec<Token>> {
         literal: None,
         line: 0,
     });
-    Ok(res)
+    if (error) {
+        Err(res)
+    } else {
+        Ok(res)
+    }
 }
 
 #[cfg(test)]

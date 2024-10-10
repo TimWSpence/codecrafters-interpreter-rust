@@ -1,15 +1,14 @@
-use anyhow::*;
+use anyhow::Result;
 use std::env;
 use std::fs;
 use std::io::{self, Write};
 
 mod scanner;
-use scanner::*;
 
 fn main() -> Result<()> {
     let args: Vec<String> = env::args().collect();
     if args.len() < 3 {
-        writeln!(io::stderr(), "Usage: {} tokenize <filename>", args[0]).unwrap();
+        writeln!(io::stderr(), "Usage: {} tokenize <filename>", args[0])?;
         todo!("Replace with clap")
     }
 
@@ -23,11 +22,22 @@ fn main() -> Result<()> {
                 String::new()
             });
 
-            let tokens = scanner::scan(&input)?;
+            let mut valid = true;
+            let tokens = match scanner::scan(&input) {
+                Err(ts) => {
+                    valid = false;
+                    ts
+                }
+                Ok(ts) => ts,
+            };
             for t in tokens {
                 println!("{}", t);
             }
-            Ok(())
+            if !valid {
+                std::process::exit(65)
+            } else {
+                Ok(())
+            }
         }
         _ => {
             writeln!(io::stderr(), "Unknown command: {}", command)?;
