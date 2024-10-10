@@ -138,7 +138,7 @@ impl fmt::Display for Token {
 }
 
 pub fn scan(input: &str) -> Result<Vec<Token>> {
-    let mut line: u32 = 0;
+    let mut line: u32 = 1;
     let mut res = vec![];
 
     let mut add_token =
@@ -165,7 +165,7 @@ pub fn scan(input: &str) -> Result<Vec<Token>> {
             ';' => add_token(TokenType::SemiColon, ";", None, line),
             '*' => add_token(TokenType::Star, "*", None, line),
             '\n' => line += 1,
-            _ => {}
+            c => println!("[Line {}] Error: Unexpected character {}", line, c),
         }
     }
 
