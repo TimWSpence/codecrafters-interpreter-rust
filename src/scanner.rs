@@ -66,14 +66,14 @@ impl fmt::Display for TokenType {
             TokenType::SemiColon => write!(f, "SEMICOLON"),
             TokenType::Slash => todo!(),
             TokenType::Star => write!(f, "STAR"),
-            TokenType::Bang => todo!(),
-            TokenType::BangEqual => todo!(),
-            TokenType::Equal => todo!(),
-            TokenType::EqualEqual => todo!(),
-            TokenType::Greater => todo!(),
-            TokenType::GreaterEqual => todo!(),
-            TokenType::Less => todo!(),
-            TokenType::LessEqual => todo!(),
+            TokenType::Bang => write!(f, "BANG"),
+            TokenType::BangEqual => write!(f, "BANG_EQUAL"),
+            TokenType::Equal => write!(f, "EQUAL"),
+            TokenType::EqualEqual => write!(f, "EQUAL_EQUAL"),
+            TokenType::Greater => write!(f, "GREATER"),
+            TokenType::GreaterEqual => write!(f, "GREATER_EQUAL"),
+            TokenType::Less => write!(f, "LESS"),
+            TokenType::LessEqual => write!(f, "LESS_EQUAL"),
             TokenType::Identifier => todo!(),
             TokenType::String => todo!(),
             TokenType::Number => todo!(),
@@ -152,7 +152,7 @@ pub fn scan(input: &str) -> Result<Vec<Token>, Vec<Token>> {
             });
         };
 
-    let mut chars = input.chars();
+    let mut chars = input.chars().peekable();
     while let Some(c) = chars.next() {
         match c {
             '(' => add_token(TokenType::LeftParen, "(", None, line),
@@ -165,6 +165,27 @@ pub fn scan(input: &str) -> Result<Vec<Token>, Vec<Token>> {
             '+' => add_token(TokenType::Plus, "+", None, line),
             ';' => add_token(TokenType::SemiColon, ";", None, line),
             '*' => add_token(TokenType::Star, "*", None, line),
+            '=' => match chars.peek() {
+                Some('=') => {
+                    chars.next();
+                    add_token(TokenType::EqualEqual, "==", None, line)
+                }
+                _ => add_token(TokenType::Equal, "=", None, line),
+            },
+            '>' => match chars.peek() {
+                Some('=') => {
+                    chars.next();
+                    add_token(TokenType::GreaterEqual, ">=", None, line)
+                }
+                _ => add_token(TokenType::Greater, ">", None, line),
+            },
+            '<' => match chars.peek() {
+                Some('=') => {
+                    chars.next();
+                    add_token(TokenType::LessEqual, "<=", None, line)
+                }
+                _ => add_token(TokenType::Less, "<", None, line),
+            },
             '\n' => line += 1,
             c => {
                 error = true;
@@ -177,7 +198,7 @@ pub fn scan(input: &str) -> Result<Vec<Token>, Vec<Token>> {
         token_type: TokenType::EOF,
         lexeme: "".to_string(),
         literal: None,
-        line: 0,
+        line,
     });
     if (error) {
         Err(res)
@@ -195,7 +216,7 @@ mod tests {
             token_type,
             lexeme: lexeme.to_string(),
             literal,
-            line: 0,
+            line: 1,
         }
     }
 
@@ -204,7 +225,7 @@ mod tests {
             token_type: TokenType::EOF,
             lexeme: "".to_string(),
             literal: None,
-            line: 0,
+            line: 1,
         }
     }
 
@@ -290,6 +311,54 @@ mod tests {
         assert_eq!(
             scan("*").unwrap(),
             vec![token(TokenType::Star, "*", None), eof()]
+        )
+    }
+
+    #[test]
+    fn equal() {
+        assert_eq!(
+            scan("=").unwrap(),
+            vec![token(TokenType::Equal, "=", None), eof()]
+        )
+    }
+
+    #[test]
+    fn equal_equal() {
+        assert_eq!(
+            scan("==").unwrap(),
+            vec![token(TokenType::EqualEqual, "==", None), eof()]
+        )
+    }
+
+    #[test]
+    fn greater() {
+        assert_eq!(
+            scan(">").unwrap(),
+            vec![token(TokenType::Greater, ">", None), eof()]
+        )
+    }
+
+    #[test]
+    fn greater_equal() {
+        assert_eq!(
+            scan(">=").unwrap(),
+            vec![token(TokenType::GreaterEqual, ">=", None), eof()]
+        )
+    }
+
+    #[test]
+    fn less() {
+        assert_eq!(
+            scan("<").unwrap(),
+            vec![token(TokenType::Less, "<", None), eof()]
+        )
+    }
+
+    #[test]
+    fn less_equal() {
+        assert_eq!(
+            scan("<=").unwrap(),
+            vec![token(TokenType::LessEqual, "<=", None), eof()]
         )
     }
 }
