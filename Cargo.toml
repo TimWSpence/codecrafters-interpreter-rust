@@ -8,5 +8,5 @@ rust-version = "1.80"
 [dependencies]
 anyhow = "1.0.89"    # error handling
 bytes = "1.7.2"      # helps manage buffers
-clap = "4.5.17"
-thiserror = "1.0.63" # error handling
+clap = { version = "4.5.20", features = ["derive"] }
+thiserror = "1.0.64" # error handling

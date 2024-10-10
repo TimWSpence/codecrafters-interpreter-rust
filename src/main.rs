@@ -1,24 +1,16 @@
 use anyhow::Result;
-use std::env;
+use clap::*;
 use std::fs;
-use std::io::{self, Write};
 
 mod scanner;
 
 fn main() -> Result<()> {
-    let args: Vec<String> = env::args().collect();
-    if args.len() < 3 {
-        writeln!(io::stderr(), "Usage: {} tokenize <filename>", args[0])?;
-        todo!("Replace with clap")
-    }
+    let cli = Cli::parse();
 
-    let command = &args[1];
-    let filename = &args[2];
-
-    match command.as_str() {
-        "tokenize" => {
-            let input = fs::read_to_string(filename).unwrap_or_else(|_| {
-                writeln!(io::stderr(), "Failed to read file {}", filename).unwrap();
+    match &cli.command {
+        Commands::Tokenize { file } => {
+            let input = fs::read_to_string(file).unwrap_or_else(|_| {
+                eprintln!("Failed to read file {}", file);
                 String::new()
             });
 
@@ -39,9 +31,18 @@ fn main() -> Result<()> {
                 Ok(())
             }
         }
-        _ => {
-            writeln!(io::stderr(), "Unknown command: {}", command)?;
-            todo!("Replace with clap")
-        }
     }
+}
+
+#[derive(Parser)]
+#[command(version, about, long_about = None)]
+#[command(propagate_version = true)]
+struct Cli {
+    #[command(subcommand)]
+    command: Commands,
+}
+
+#[derive(Subcommand)]
+enum Commands {
+    Tokenize { file: String },
 }

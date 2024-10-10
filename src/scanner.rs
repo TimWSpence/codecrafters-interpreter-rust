@@ -207,7 +207,7 @@ pub fn scan(input: &str) -> Result<Vec<Token>, Vec<Token>> {
         literal: None,
         line,
     });
-    if (error) {
+    if error {
         Err(res)
     } else {
         Ok(res)
