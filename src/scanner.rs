@@ -221,7 +221,12 @@ pub fn scan(input: &str) -> Result<Vec<Token>, Vec<Token>> {
                     }
                 }
                 if matching {
-                    add_token(TokenType::String, &s.clone(), Some(Literal::Str(s)), line);
+                    add_token(
+                        TokenType::String,
+                        &format!("\"{}\"", s.clone()),
+                        Some(Literal::Str(s)),
+                        line,
+                    );
                     line += lines;
                 } else {
                     eprintln!("[line {}] Error: Unterminated string.", line);
@@ -468,7 +473,7 @@ mod tests {
             vec![
                 token(
                     TokenType::String,
-                    "foo bar",
+                    "\"foo bar\"",
                     Some(Literal::Str("foo bar".to_string()))
                 ),
                 eof()
@@ -481,7 +486,11 @@ mod tests {
         assert_eq!(
             scan("\"\"").unwrap(),
             vec![
-                token(TokenType::String, "", Some(Literal::Str("".to_string()))),
+                token(
+                    TokenType::String,
+                    "\"\"",
+                    Some(Literal::Str("".to_string()))
+                ),
                 eof()
             ]
         )
@@ -494,7 +503,7 @@ mod tests {
             vec![
                 token(
                     TokenType::String,
-                    "foo\nbar",
+                    "\"foo\nbar\"",
                     Some(Literal::Str("foo\nbar".to_string()))
                 ),
                 eof_at_line(2)
