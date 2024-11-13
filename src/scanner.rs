@@ -229,6 +229,7 @@ pub fn scan(input: &str) -> Result<Vec<Token>, Vec<Token>> {
                     );
                     line += lines;
                 } else {
+                    error = true;
                     eprintln!("[line {}] Error: Unterminated string.", line);
                 }
             }
