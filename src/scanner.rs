@@ -75,7 +75,7 @@ impl fmt::Display for TokenType {
             TokenType::Less => write!(f, "LESS"),
             TokenType::LessEqual => write!(f, "LESS_EQUAL"),
             TokenType::Identifier => todo!(),
-            TokenType::String => todo!(),
+            TokenType::String => write!(f, "STRING"),
             TokenType::Number => todo!(),
             TokenType::And => todo!(),
             TokenType::Class => todo!(),
@@ -206,6 +206,27 @@ pub fn scan(input: &str) -> Result<Vec<Token>, Vec<Token>> {
                 }
                 _ => add_token(TokenType::Slash, "/", None, line),
             },
+            '"' => {
+                let mut s = String::new();
+                let mut matching = false;
+                let mut lines = 0;
+                while let Some(c) = chars.next() {
+                    if c == '"' {
+                        matching = true;
+                        break;
+                    }
+                    s.push(c);
+                    if c == '\n' {
+                        lines += 1;
+                    }
+                }
+                if matching {
+                    add_token(TokenType::String, &s.clone(), Some(Literal::Str(s)), line);
+                    line += lines;
+                } else {
+                    eprintln!("[line {}] Error: Unterminated string.", line);
+                }
+            }
             c => {
                 error = true;
                 eprintln!("[line {}] Error: Unexpected character: {}", line, c);
@@ -245,6 +266,15 @@ mod tests {
             lexeme: "".to_string(),
             literal: None,
             line: 1,
+        }
+    }
+
+    fn eof_at_line(line: u32) -> Token {
+        Token {
+            token_type: TokenType::EOF,
+            lexeme: "".to_string(),
+            literal: None,
+            line: line,
         }
     }
 
@@ -416,31 +446,59 @@ mod tests {
                     literal: None,
                     line: 2
                 },
-                Token {
-                    token_type: TokenType::EOF,
-                    lexeme: "".to_string(),
-                    literal: None,
-                    line: 2,
-                }
+                eof_at_line(2)
             ]
         )
     }
 
     #[test]
     fn comment_at_end() {
-        assert_eq!(
-            scan("//foo\n").unwrap(),
-            vec![Token {
-                token_type: TokenType::EOF,
-                lexeme: "".to_string(),
-                literal: None,
-                line: 2,
-            }]
-        )
+        assert_eq!(scan("//foo\n").unwrap(), vec![eof_at_line(2)])
     }
 
     #[test]
     fn whitespace() {
         assert_eq!(scan(" \t").unwrap(), vec![eof()])
+    }
+
+    #[test]
+    fn string_literal() {
+        assert_eq!(
+            scan("\"foo bar\"").unwrap(),
+            vec![
+                token(
+                    TokenType::String,
+                    "foo bar",
+                    Some(Literal::Str("foo bar".to_string()))
+                ),
+                eof()
+            ]
+        )
+    }
+
+    #[test]
+    fn empty_string_literal() {
+        assert_eq!(
+            scan("\"\"").unwrap(),
+            vec![
+                token(TokenType::String, "", Some(Literal::Str("".to_string()))),
+                eof()
+            ]
+        )
+    }
+
+    #[test]
+    fn multiline_string_literal() {
+        assert_eq!(
+            scan("\"foo\nbar\"").unwrap(),
+            vec![
+                token(
+                    TokenType::String,
+                    "foo\nbar",
+                    Some(Literal::Str("foo\nbar".to_string()))
+                ),
+                eof_at_line(2)
+            ]
+        )
     }
 }
