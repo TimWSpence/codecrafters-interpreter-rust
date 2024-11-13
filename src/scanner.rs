@@ -64,7 +64,7 @@ impl fmt::Display for TokenType {
             TokenType::Minus => write!(f, "MINUS"),
             TokenType::Plus => write!(f, "PLUS"),
             TokenType::SemiColon => write!(f, "SEMICOLON"),
-            TokenType::Slash => todo!(),
+            TokenType::Slash => write!(f, "SLASH"),
             TokenType::Star => write!(f, "STAR"),
             TokenType::Bang => write!(f, "BANG"),
             TokenType::BangEqual => write!(f, "BANG_EQUAL"),
@@ -194,6 +194,16 @@ pub fn scan(input: &str) -> Result<Vec<Token>, Vec<Token>> {
                 _ => add_token(TokenType::Less, "<", None, line),
             },
             '\n' => line += 1,
+            '/' => match chars.peek() {
+                Some('/') => {
+                    while let Some(c) = chars.next() {
+                        if c == '\n' {
+                            break;
+                        }
+                    }
+                }
+                _ => add_token(TokenType::Slash, "/", None, line),
+            },
             c => {
                 error = true;
                 eprintln!("[line {}] Error: Unexpected character: {}", line, c);
@@ -382,6 +392,22 @@ mod tests {
         assert_eq!(
             scan("!=").unwrap(),
             vec![token(TokenType::BangEqual, "!=", None), eof()]
+        )
+    }
+
+    #[test]
+    fn slash() {
+        assert_eq!(
+            scan("/").unwrap(),
+            vec![token(TokenType::Slash, "/", None), eof()]
+        )
+    }
+
+    #[test]
+    fn comment() {
+        assert_eq!(
+            scan("//foo\n/").unwrap(),
+            vec![token(TokenType::Slash, "/", None), eof()]
         )
     }
 }
