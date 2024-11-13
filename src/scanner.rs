@@ -198,6 +198,7 @@ pub fn scan(input: &str) -> Result<Vec<Token>, Vec<Token>> {
                 Some('/') => {
                     while let Some(c) = chars.next() {
                         if c == '\n' {
+                            line += 1;
                             break;
                         }
                     }
@@ -407,12 +408,33 @@ mod tests {
     fn comment() {
         assert_eq!(
             scan("//foo\n/").unwrap(),
-            vec![token(TokenType::Slash, "/", None), eof()]
+            vec![
+                Token {
+                    token_type: TokenType::Slash,
+                    lexeme: "/".to_string(),
+                    literal: None,
+                    line: 2
+                },
+                Token {
+                    token_type: TokenType::EOF,
+                    lexeme: "".to_string(),
+                    literal: None,
+                    line: 2,
+                }
+            ]
         )
     }
 
     #[test]
     fn comment_at_end() {
-        assert_eq!(scan("//foo\n").unwrap(), vec![eof()])
+        assert_eq!(
+            scan("//foo\n").unwrap(),
+            vec![Token {
+                token_type: TokenType::EOF,
+                lexeme: "".to_string(),
+                literal: None,
+                line: 2,
+            }]
+        )
     }
 }
