@@ -194,6 +194,7 @@ pub fn scan(input: &str) -> Result<Vec<Token>, Vec<Token>> {
                 _ => add_token(TokenType::Less, "<", None, line),
             },
             '\n' => line += 1,
+            c if c.is_whitespace() => {}
             '/' => match chars.peek() {
                 Some('/') => {
                     while let Some(c) = chars.next() {
@@ -436,5 +437,10 @@ mod tests {
                 line: 2,
             }]
         )
+    }
+
+    #[test]
+    fn whitespace() {
+        assert_eq!(scan(" \t").unwrap(), vec![eof()])
     }
 }
