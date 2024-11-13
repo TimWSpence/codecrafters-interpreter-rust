@@ -197,7 +197,7 @@ pub fn scan(input: &str) -> Result<Vec<Token>, Vec<Token>> {
             c if c.is_whitespace() => {}
             '/' => match chars.peek() {
                 Some('/') => {
-                    while let Some(c) = chars.next() {
+                    for c in chars.by_ref() {
                         if c == '\n' {
                             line += 1;
                             break;
@@ -210,7 +210,7 @@ pub fn scan(input: &str) -> Result<Vec<Token>, Vec<Token>> {
                 let mut s = String::new();
                 let mut matching = false;
                 let mut lines = 0;
-                while let Some(c) = chars.next() {
+                for c in chars.by_ref() {
                     if c == '"' {
                         matching = true;
                         break;
@@ -280,7 +280,7 @@ mod tests {
             token_type: TokenType::EOF,
             lexeme: "".to_string(),
             literal: None,
-            line: line,
+            line,
         }
     }
 
