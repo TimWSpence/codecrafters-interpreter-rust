@@ -410,4 +410,9 @@ mod tests {
             vec![token(TokenType::Slash, "/", None), eof()]
         )
     }
+
+    #[test]
+    fn comment_at_end() {
+        assert_eq!(scan("//foo\n").unwrap(), vec![eof()])
+    }
 }
