@@ -605,4 +605,20 @@ mod tests {
             ]
         )
     }
+
+    #[test]
+    fn dot_then_float() {
+        assert_eq!(
+            scan(".123.45").unwrap(),
+            vec![
+                token(TokenType::Dot, ".", None),
+                token(
+                    TokenType::Number,
+                    "123.45",
+                    Some(Literal::Number(123.45f64))
+                ),
+                eof()
+            ]
+        )
+    }
 }
