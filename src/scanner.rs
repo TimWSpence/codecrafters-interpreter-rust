@@ -76,25 +76,25 @@ impl fmt::Display for TokenType {
             TokenType::GreaterEqual => write!(f, "GREATER_EQUAL"),
             TokenType::Less => write!(f, "LESS"),
             TokenType::LessEqual => write!(f, "LESS_EQUAL"),
-            TokenType::Identifier => todo!(),
+            TokenType::Identifier => write!(f, "IDENTIFIER"),
             TokenType::String => write!(f, "STRING"),
             TokenType::Number => write!(f, "NUMBER"),
-            TokenType::And => write!(f, "and"),
-            TokenType::Class => write!(f, "class"),
-            TokenType::Else => write!(f, "else"),
-            TokenType::False => write!(f, "false"),
-            TokenType::Fun => write!(f, "fun"),
-            TokenType::For => write!(f, "for"),
-            TokenType::If => write!(f, "if"),
-            TokenType::Nil => write!(f, "nil"),
-            TokenType::Or => write!(f, "or"),
-            TokenType::Print => write!(f, "print"),
-            TokenType::Return => write!(f, "return"),
-            TokenType::Super => write!(f, "super"),
-            TokenType::This => write!(f, "this"),
-            TokenType::True => write!(f, "true"),
-            TokenType::Var => write!(f, "var"),
-            TokenType::While => write!(f, "while"),
+            TokenType::And => write!(f, "AND"),
+            TokenType::Class => write!(f, "CLASS"),
+            TokenType::Else => write!(f, "ELSE"),
+            TokenType::False => write!(f, "FALSE"),
+            TokenType::Fun => write!(f, "FUN"),
+            TokenType::For => write!(f, "FOR"),
+            TokenType::If => write!(f, "IF"),
+            TokenType::Nil => write!(f, "NIL"),
+            TokenType::Or => write!(f, "OR"),
+            TokenType::Print => write!(f, "PRINT"),
+            TokenType::Return => write!(f, "RETURN"),
+            TokenType::Super => write!(f, "SUPER"),
+            TokenType::This => write!(f, "THIS"),
+            TokenType::True => write!(f, "TRUE"),
+            TokenType::Var => write!(f, "VAR"),
+            TokenType::While => write!(f, "WHILE"),
             TokenType::EOF => write!(f, "EOF"),
         }
     }
@@ -243,13 +243,15 @@ pub fn scan(input: &str) -> Result<Vec<Token>, Vec<Token>> {
                     add_token(TokenType::Dot, ".", None, line)
                 }
             }
-            c if c.is_alphabetic() => {
+            c if c.is_alphabetic() || c == '_' => {
                 let mut value = String::new();
                 value.push(c);
                 while let Some(c) = chars.peek() {
-                    if c.is_alphanumeric() {
+                    if c.is_alphanumeric() || *c == '_' {
                         value.push(*c);
                         chars.next();
+                    } else {
+                        break;
                     }
                 }
                 match KEYWORDS.get(&value) {
@@ -670,8 +672,8 @@ mod tests {
     #[test]
     fn identifier() {
         assert_eq!(
-            scan("foo").unwrap(),
-            vec![token(TokenType::Identifier, "foo", None), eof()]
+            scan("foo_").unwrap(),
+            vec![token(TokenType::Identifier, "foo_", None), eof()]
         )
     }
 
