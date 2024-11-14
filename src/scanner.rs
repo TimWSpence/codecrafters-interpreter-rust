@@ -1,7 +1,9 @@
 use anyhow::anyhow;
+use lazy_static::lazy_static;
+use std::collections::HashMap;
 use std::fmt;
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Copy, Clone)]
 pub enum TokenType {
     // Single character tokens
     LeftParen,
@@ -77,22 +79,22 @@ impl fmt::Display for TokenType {
             TokenType::Identifier => todo!(),
             TokenType::String => write!(f, "STRING"),
             TokenType::Number => write!(f, "NUMBER"),
-            TokenType::And => todo!(),
-            TokenType::Class => todo!(),
-            TokenType::Else => todo!(),
-            TokenType::False => todo!(),
-            TokenType::Fun => todo!(),
-            TokenType::For => todo!(),
-            TokenType::If => todo!(),
-            TokenType::Nil => todo!(),
-            TokenType::Or => todo!(),
-            TokenType::Print => todo!(),
-            TokenType::Return => todo!(),
-            TokenType::Super => todo!(),
-            TokenType::This => todo!(),
-            TokenType::True => todo!(),
-            TokenType::Var => todo!(),
-            TokenType::While => todo!(),
+            TokenType::And => write!(f, "and"),
+            TokenType::Class => write!(f, "class"),
+            TokenType::Else => write!(f, "else"),
+            TokenType::False => write!(f, "false"),
+            TokenType::Fun => write!(f, "fun"),
+            TokenType::For => write!(f, "for"),
+            TokenType::If => write!(f, "if"),
+            TokenType::Nil => write!(f, "nil"),
+            TokenType::Or => write!(f, "or"),
+            TokenType::Print => write!(f, "print"),
+            TokenType::Return => write!(f, "return"),
+            TokenType::Super => write!(f, "super"),
+            TokenType::This => write!(f, "this"),
+            TokenType::True => write!(f, "true"),
+            TokenType::Var => write!(f, "var"),
+            TokenType::While => write!(f, "while"),
             TokenType::EOF => write!(f, "EOF"),
         }
     }
@@ -241,6 +243,20 @@ pub fn scan(input: &str) -> Result<Vec<Token>, Vec<Token>> {
                     add_token(TokenType::Dot, ".", None, line)
                 }
             }
+            c if c.is_alphabetic() => {
+                let mut value = String::new();
+                value.push(c);
+                while let Some(c) = chars.peek() {
+                    if c.is_alphanumeric() {
+                        value.push(*c);
+                        chars.next();
+                    }
+                }
+                match KEYWORDS.get(&value) {
+                    Some(t) => add_token(*t, &value, None, line),
+                    _ => add_token(TokenType::Identifier, &value, None, line),
+                }
+            }
             '/' => match chars.peek() {
                 Some('/') => {
                     for c in chars.by_ref() {
@@ -297,6 +313,29 @@ pub fn scan(input: &str) -> Result<Vec<Token>, Vec<Token>> {
     } else {
         Ok(res)
     }
+}
+
+lazy_static! {
+    static ref KEYWORDS: HashMap<String, TokenType> = {
+        let mut m = HashMap::new();
+        m.insert("and".to_string(), TokenType::And);
+        m.insert("class".to_string(), TokenType::Class);
+        m.insert("else".to_string(), TokenType::Else);
+        m.insert("false".to_string(), TokenType::False);
+        m.insert("fun".to_string(), TokenType::Fun);
+        m.insert("for".to_string(), TokenType::For);
+        m.insert("if".to_string(), TokenType::If);
+        m.insert("nil".to_string(), TokenType::Nil);
+        m.insert("or".to_string(), TokenType::Or);
+        m.insert("print".to_string(), TokenType::Print);
+        m.insert("return".to_string(), TokenType::Return);
+        m.insert("super".to_string(), TokenType::Super);
+        m.insert("this".to_string(), TokenType::This);
+        m.insert("true".to_string(), TokenType::True);
+        m.insert("var".to_string(), TokenType::Var);
+        m.insert("while".to_string(), TokenType::While);
+        m
+    };
 }
 
 #[cfg(test)]
@@ -625,6 +664,142 @@ mod tests {
                 ),
                 eof()
             ]
+        )
+    }
+
+    #[test]
+    fn identifier() {
+        assert_eq!(
+            scan("foo").unwrap(),
+            vec![token(TokenType::Identifier, "foo", None), eof()]
+        )
+    }
+
+    #[test]
+    fn keyword_and() {
+        assert_eq!(
+            scan("and").unwrap(),
+            vec![token(TokenType::And, "and", None), eof()]
+        )
+    }
+
+    #[test]
+    fn keyword_class() {
+        assert_eq!(
+            scan("class").unwrap(),
+            vec![token(TokenType::Class, "class", None), eof()]
+        )
+    }
+
+    #[test]
+    fn keyword_else() {
+        assert_eq!(
+            scan("else").unwrap(),
+            vec![token(TokenType::Else, "else", None), eof()]
+        )
+    }
+
+    #[test]
+    fn keyword_false() {
+        assert_eq!(
+            scan("false").unwrap(),
+            vec![token(TokenType::False, "false", None), eof()]
+        )
+    }
+
+    #[test]
+    fn keyword_fun() {
+        assert_eq!(
+            scan("fun").unwrap(),
+            vec![token(TokenType::Fun, "fun", None), eof()]
+        )
+    }
+
+    #[test]
+    fn keyword_for() {
+        assert_eq!(
+            scan("for").unwrap(),
+            vec![token(TokenType::For, "for", None), eof()]
+        )
+    }
+
+    #[test]
+    fn keyword_if() {
+        assert_eq!(
+            scan("if").unwrap(),
+            vec![token(TokenType::If, "if", None), eof()]
+        )
+    }
+
+    #[test]
+    fn keyword_nil() {
+        assert_eq!(
+            scan("nil").unwrap(),
+            vec![token(TokenType::Nil, "nil", None), eof()]
+        )
+    }
+
+    #[test]
+    fn keyword_or() {
+        assert_eq!(
+            scan("or").unwrap(),
+            vec![token(TokenType::Or, "or", None), eof()]
+        )
+    }
+
+    #[test]
+    fn keyword_print() {
+        assert_eq!(
+            scan("print").unwrap(),
+            vec![token(TokenType::Print, "print", None), eof()]
+        )
+    }
+
+    #[test]
+    fn keyword_return() {
+        assert_eq!(
+            scan("return").unwrap(),
+            vec![token(TokenType::Return, "return", None), eof()]
+        )
+    }
+
+    #[test]
+    fn keyword_super() {
+        assert_eq!(
+            scan("super").unwrap(),
+            vec![token(TokenType::Super, "super", None), eof()]
+        )
+    }
+
+    #[test]
+    fn keyword_this() {
+        assert_eq!(
+            scan("this").unwrap(),
+            vec![token(TokenType::This, "this", None), eof()]
+        )
+    }
+
+    #[test]
+    fn keyword_true() {
+        assert_eq!(
+            scan("true").unwrap(),
+            vec![token(TokenType::True, "true", None), eof()]
+        )
+    }
+
+    #[test]
+    fn keyword_var() {
+        assert_eq!(
+            scan("var").unwrap(),
+            vec![token(TokenType::Var, "var", None), eof()]
+        )
+    }
+
+    #[test]
+    fn keyword_while() {
+        assert_eq!(
+            scan("while").unwrap(),
+            vec![token(TokenType::While, "while", None), eof()]
         )
     }
 }
