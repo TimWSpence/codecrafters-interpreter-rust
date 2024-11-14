@@ -76,7 +76,7 @@ impl fmt::Display for TokenType {
             TokenType::LessEqual => write!(f, "LESS_EQUAL"),
             TokenType::Identifier => todo!(),
             TokenType::String => write!(f, "STRING"),
-            TokenType::Number => todo!(),
+            TokenType::Number => write!(f, "NUMBER"),
             TokenType::And => todo!(),
             TokenType::Class => todo!(),
             TokenType::Else => todo!(),
@@ -195,6 +195,46 @@ pub fn scan(input: &str) -> Result<Vec<Token>, Vec<Token>> {
             },
             '\n' => line += 1,
             c if c.is_whitespace() => {}
+            c if c.is_numeric() => {
+                let mut value = String::new();
+                let mut found_decimal = false;
+                let mut trailing_dot = false;
+                value.push(c);
+                while let Some(c) = chars.peek() {
+                    if c.is_numeric() {
+                        value.push(*c);
+                        chars.next();
+                    } else if !found_decimal && *c == '.' {
+                        chars.next();
+                        if let Some(c) = chars.peek() {
+                            if c.is_numeric() {
+                                found_decimal = true;
+                                value.push('.');
+                                value.push(*c);
+                                chars.next();
+                            } else {
+                                trailing_dot = true;
+                                break;
+                            }
+                        } else {
+                            trailing_dot = true;
+                            break;
+                        }
+                    } else {
+                        break;
+                    }
+                }
+                match value.parse::<f64>() {
+                    Ok(f) => add_token(TokenType::Number, &value, Some(Literal::Number(f)), line),
+                    Err(_) => {
+                        error = true;
+                        eprintln!("Could not parse number {}", value);
+                    }
+                }
+                if trailing_dot {
+                    add_token(TokenType::Dot, ".", None, line)
+                }
+            }
             '/' => match chars.peek() {
                 Some('/') => {
                     for c in chars.by_ref() {
@@ -508,6 +548,60 @@ mod tests {
                     Some(Literal::Str("foo\nbar".to_string()))
                 ),
                 eof_at_line(2)
+            ]
+        )
+    }
+
+    #[test]
+    fn integer_number() {
+        assert_eq!(
+            scan("123").unwrap(),
+            vec![
+                token(TokenType::Number, "123", Some(Literal::Number(123f64))),
+                eof()
+            ]
+        )
+    }
+
+    #[test]
+    fn float_number() {
+        assert_eq!(
+            scan("123.45").unwrap(),
+            vec![
+                token(
+                    TokenType::Number,
+                    "123.45",
+                    Some(Literal::Number(123.45f64))
+                ),
+                eof()
+            ]
+        )
+    }
+
+    #[test]
+    fn integer_then_dot() {
+        assert_eq!(
+            scan("123.").unwrap(),
+            vec![
+                token(TokenType::Number, "123", Some(Literal::Number(123f64))),
+                token(TokenType::Dot, ".", None),
+                eof()
+            ]
+        )
+    }
+
+    #[test]
+    fn float_then_dot() {
+        assert_eq!(
+            scan("123.45.").unwrap(),
+            vec![
+                token(
+                    TokenType::Number,
+                    "123.45",
+                    Some(Literal::Number(123.45f64))
+                ),
+                token(TokenType::Dot, ".", None),
+                eof()
             ]
         )
     }
