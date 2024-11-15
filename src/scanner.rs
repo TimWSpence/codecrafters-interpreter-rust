@@ -173,6 +173,8 @@ pub fn scan(input: &str) -> Result<Vec<Token>, Vec<Token>> {
         next
     };
 
+    let mut current = || *current.borrow();
+
     while let Some(c) = advance() {
         match c {
             '(' => add_token(TokenType::LeftParen, "(", None, line),
@@ -252,7 +254,7 @@ pub fn scan(input: &str) -> Result<Vec<Token>, Vec<Token>> {
                         eprintln!("Could not parse number {}", value);
                     }
                 }
-                if *current.borrow() == Some('.') {
+                if current() == Some('.') {
                     add_token(TokenType::Dot, ".", None, line)
                 }
             }
