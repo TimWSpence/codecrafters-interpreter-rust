@@ -1,5 +1,6 @@
 use anyhow::anyhow;
 use lazy_static::lazy_static;
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fmt;
 
@@ -160,8 +161,17 @@ pub fn scan(input: &str) -> Result<Vec<Token>, Vec<Token>> {
             });
         };
 
-    let mut chars = input.chars().peekable();
-    while let Some(c) = chars.next() {
+    let mut current: Option<char> = None;
+    let chars = RefCell::new(input.chars().peekable());
+
+    let peek = || chars.borrow_mut().peek().cloned();
+
+    let mut advance = || {
+        current = chars.borrow_mut().next();
+        current
+    };
+
+    while let Some(c) = advance() {
         match c {
             '(' => add_token(TokenType::LeftParen, "(", None, line),
             ')' => add_token(TokenType::RightParen, ")", None, line),
@@ -173,30 +183,30 @@ pub fn scan(input: &str) -> Result<Vec<Token>, Vec<Token>> {
             '+' => add_token(TokenType::Plus, "+", None, line),
             ';' => add_token(TokenType::SemiColon, ";", None, line),
             '*' => add_token(TokenType::Star, "*", None, line),
-            '!' => match chars.peek() {
+            '!' => match peek() {
                 Some('=') => {
-                    chars.next();
+                    advance();
                     add_token(TokenType::BangEqual, "!=", None, line)
                 }
                 _ => add_token(TokenType::Bang, "!", None, line),
             },
-            '=' => match chars.peek() {
+            '=' => match peek() {
                 Some('=') => {
-                    chars.next();
+                    advance();
                     add_token(TokenType::EqualEqual, "==", None, line)
                 }
                 _ => add_token(TokenType::Equal, "=", None, line),
             },
-            '>' => match chars.peek() {
+            '>' => match peek() {
                 Some('=') => {
-                    chars.next();
+                    advance();
                     add_token(TokenType::GreaterEqual, ">=", None, line)
                 }
                 _ => add_token(TokenType::Greater, ">", None, line),
             },
-            '<' => match chars.peek() {
+            '<' => match peek() {
                 Some('=') => {
-                    chars.next();
+                    advance();
                     add_token(TokenType::LessEqual, "<=", None, line)
                 }
                 _ => add_token(TokenType::Less, "<", None, line),
@@ -208,18 +218,18 @@ pub fn scan(input: &str) -> Result<Vec<Token>, Vec<Token>> {
                 let mut found_decimal = false;
                 let mut trailing_dot = false;
                 value.push(c);
-                while let Some(c) = chars.peek() {
+                while let Some(c) = peek() {
                     if c.is_numeric() {
-                        value.push(*c);
-                        chars.next();
-                    } else if !found_decimal && *c == '.' {
-                        chars.next();
-                        if let Some(c) = chars.peek() {
+                        value.push(c);
+                        advance();
+                    } else if !found_decimal && c == '.' {
+                        advance();
+                        if let Some(c) = peek() {
                             if c.is_numeric() {
                                 found_decimal = true;
                                 value.push('.');
-                                value.push(*c);
-                                chars.next();
+                                value.push(c);
+                                advance();
                             } else {
                                 trailing_dot = true;
                                 break;
@@ -246,10 +256,10 @@ pub fn scan(input: &str) -> Result<Vec<Token>, Vec<Token>> {
             c if c.is_alphabetic() || c == '_' => {
                 let mut value = String::new();
                 value.push(c);
-                while let Some(c) = chars.peek() {
-                    if c.is_alphanumeric() || *c == '_' {
-                        value.push(*c);
-                        chars.next();
+                while let Some(c) = peek() {
+                    if c.is_alphanumeric() || c == '_' {
+                        value.push(c);
+                        advance();
                     } else {
                         break;
                     }
@@ -259,9 +269,9 @@ pub fn scan(input: &str) -> Result<Vec<Token>, Vec<Token>> {
                     _ => add_token(TokenType::Identifier, &value, None, line),
                 }
             }
-            '/' => match chars.peek() {
+            '/' => match peek() {
                 Some('/') => {
-                    for c in chars.by_ref() {
+                    while let Some(c) = advance() {
                         if c == '\n' {
                             line += 1;
                             break;
@@ -274,7 +284,7 @@ pub fn scan(input: &str) -> Result<Vec<Token>, Vec<Token>> {
                 let mut s = String::new();
                 let mut matching = false;
                 let mut lines = 0;
-                for c in chars.by_ref() {
+                while let Some(c) = advance() {
                     if c == '"' {
                         matching = true;
                         break;
