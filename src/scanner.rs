@@ -1,5 +1,6 @@
 use anyhow::anyhow;
 use lazy_static::lazy_static;
+use std::borrow::Borrow;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fmt;
@@ -161,14 +162,15 @@ pub fn scan(input: &str) -> Result<Vec<Token>, Vec<Token>> {
             });
         };
 
-    let mut current: Option<char> = None;
+    let current: RefCell<Option<char>> = RefCell::new(None);
     let chars = RefCell::new(input.chars().peekable());
 
     let peek = || chars.borrow_mut().peek().cloned();
 
     let mut advance = || {
-        current = chars.borrow_mut().next();
-        current
+        let next = chars.borrow_mut().next();
+        *current.borrow_mut() = next;
+        next
     };
 
     while let Some(c) = advance() {
@@ -216,26 +218,27 @@ pub fn scan(input: &str) -> Result<Vec<Token>, Vec<Token>> {
             c if c.is_numeric() => {
                 let mut value = String::new();
                 let mut found_decimal = false;
-                let mut trailing_dot = false;
                 value.push(c);
                 while let Some(c) = peek() {
                     if c.is_numeric() {
                         value.push(c);
                         advance();
                     } else if !found_decimal && c == '.' {
+                        // potential float literal
                         advance();
                         if let Some(c) = peek() {
                             if c.is_numeric() {
+                                // float literal case
                                 found_decimal = true;
                                 value.push('.');
                                 value.push(c);
                                 advance();
                             } else {
-                                trailing_dot = true;
+                                // int literal followed by .
                                 break;
                             }
                         } else {
-                            trailing_dot = true;
+                            // int literal followed by . then EOF
                             break;
                         }
                     } else {
@@ -249,7 +252,7 @@ pub fn scan(input: &str) -> Result<Vec<Token>, Vec<Token>> {
                         eprintln!("Could not parse number {}", value);
                     }
                 }
-                if trailing_dot {
+                if *current.borrow() == Some('.') {
                     add_token(TokenType::Dot, ".", None, line)
                 }
             }
