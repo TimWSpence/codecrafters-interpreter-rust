@@ -1,6 +1,5 @@
 use anyhow::anyhow;
 use lazy_static::lazy_static;
-use std::borrow::Borrow;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fmt;

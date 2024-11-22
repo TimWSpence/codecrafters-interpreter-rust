@@ -2,6 +2,8 @@ use anyhow::Result;
 use clap::*;
 use std::fs;
 
+mod ast;
+mod parser;
 mod scanner;
 
 fn main() -> Result<()> {
