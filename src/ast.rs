@@ -125,8 +125,8 @@ impl fmt::Display for Expr {
                 object,
                 name,
                 value,
-            } => write!(f, "(= {} {} {})", object, name, value),
-            Expr::Super { keyword: _, method } => write!(f, "(super {}", method.lexeme),
+            } => write!(f, "(= {} {} {})", object, name.lexeme, value),
+            Expr::Super { keyword: _, method } => write!(f, "(super {})", method.lexeme),
             Expr::This { keyword: _ } => write!(f, "this"),
             Expr::Unary { op, expr } => write!(f, "({} {})", op.lexeme, expr),
             Expr::Variable { name } => write!(f, "{}", name.lexeme),
@@ -144,7 +144,13 @@ impl fmt::Display for Literal {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Literal::Str(s) => write!(f, "\"{}\"", s),
-            Literal::Number(n) => write!(f, "{}", n),
+            Literal::Number(n) => {
+                let mut s = n.to_string();
+                if !s.contains('.') {
+                    s.push_str(".0");
+                }
+                write!(f, "{}", s)
+            }
         }
     }
 }
@@ -207,7 +213,7 @@ mod tests {
                     })
                 }
             ),
-            "(1 < 2)"
+            "(1.0 < 2.0)"
         )
     }
 
@@ -231,7 +237,7 @@ mod tests {
                     })
                 }
             ),
-            "(1 or 2)"
+            "(1.0 or 2.0)"
         )
     }
 
@@ -274,11 +280,13 @@ mod tests {
         assert_eq!(
             format!(
                 "{}",
-                Expr::Literal {
-                    value: Literal::Number(1f64)
+                Expr::Grouping {
+                    expr: Box::new(Expr::Literal {
+                        value: Literal::Number(1f64)
+                    })
                 }
             ),
-            "(group 1)"
+            "(group 1.0)"
         )
     }
 
@@ -300,7 +308,7 @@ mod tests {
                     ]
                 }
             ),
-            "(call foo 1 \"bar\")"
+            "(call foo 1.0 \"bar\")"
         )
     }
 
@@ -333,12 +341,12 @@ mod tests {
                         }
                     }),
                     name: token("bar"),
-                    value: Expr::Literal {
+                    value: Box::new(Expr::Literal {
                         value: Literal::Number(1f64)
-                    }
+                    })
                 }
             ),
-            "(= foo bar 1)"
+            "(= foo bar 1.0)"
         )
     }
 }
