@@ -106,7 +106,7 @@ impl fmt::Display for Expr {
             Expr::Binary { left, op, right } => write!(f, "({} {} {})", left, op.lexeme, right),
             Expr::Call {
                 callee,
-                paren,
+                paren: _,
                 args,
             } => write!(
                 f,
@@ -117,17 +117,17 @@ impl fmt::Display for Expr {
                     .collect::<Vec<String>>()
                     .join(" ")
             ),
-            Expr::Get { object, name } => write!(f, "({} . {})", object, name.lexeme),
+            Expr::Get { object, name } => write!(f, "(. {} {})", object, name.lexeme),
             Expr::Grouping { expr } => write!(f, "(group {})", expr),
             Expr::Literal { value } => write!(f, "{}", value),
-            Expr::Logical { left, op, right } => todo!(),
+            Expr::Logical { left, op, right } => write!(f, "({} {} {})", left, op.lexeme, right),
             Expr::Set {
                 object,
                 name,
                 value,
-            } => todo!(),
-            Expr::Super { keyword, method } => todo!(),
-            Expr::This { keyword } => write!(f, "this"),
+            } => write!(f, "(= {} {} {})", object, name, value),
+            Expr::Super { keyword: _, method } => write!(f, "(super {}", method.lexeme),
+            Expr::This { keyword: _ } => write!(f, "this"),
             Expr::Unary { op, expr } => write!(f, "({} {})", op.lexeme, expr),
             Expr::Variable { name } => write!(f, "{}", name.lexeme),
         }
@@ -212,6 +212,30 @@ mod tests {
     }
 
     #[test]
+    fn print_logical() {
+        assert_eq!(
+            format!(
+                "{}",
+                Expr::Logical {
+                    left: Box::new(Expr::Literal {
+                        value: Literal::Number(1f64)
+                    }),
+                    op: Token {
+                        token_type: TokenType::Or,
+                        lexeme: "or".to_string(),
+                        literal: None,
+                        line: 0
+                    },
+                    right: Box::new(Expr::Literal {
+                        value: Literal::Number(2f64)
+                    })
+                }
+            ),
+            "(1 or 2)"
+        )
+    }
+
+    #[test]
     fn print_get() {
         assert_eq!(
             format!(
@@ -228,7 +252,7 @@ mod tests {
                     name: token("bar")
                 }
             ),
-            "(foo . bar)"
+            "(. foo bar)"
         )
     }
 
@@ -277,6 +301,44 @@ mod tests {
                 }
             ),
             "(call foo 1 \"bar\")"
+        )
+    }
+
+    #[test]
+    fn print_super() {
+        assert_eq!(
+            format!(
+                "{}",
+                Expr::Super {
+                    keyword: token("super"),
+                    method: token("foo")
+                }
+            ),
+            "(super foo)"
+        )
+    }
+
+    #[test]
+    fn print_set() {
+        assert_eq!(
+            format!(
+                "{}",
+                Expr::Set {
+                    object: Box::new(Expr::Variable {
+                        name: Token {
+                            token_type: TokenType::Identifier,
+                            lexeme: "foo".to_string(),
+                            literal: None,
+                            line: 0
+                        }
+                    }),
+                    name: token("bar"),
+                    value: Expr::Literal {
+                        value: Literal::Number(1f64)
+                    }
+                }
+            ),
+            "(= foo bar 1)"
         )
     }
 }
