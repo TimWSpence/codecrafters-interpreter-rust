@@ -8,7 +8,7 @@ pub enum Stmt {
     },
     Class {
         name: Token,
-        superclass: Token,
+        superclass: Option<Token>,
         methods: Vec<Function>,
     },
     Expression {
@@ -47,8 +47,17 @@ impl fmt::Display for Stmt {
                 name,
                 superclass,
                 methods,
-            } => todo!(),
-            Stmt::Expression { expr } => todo!(),
+            } => {
+                write!(f, "(class {}", name.lexeme)?;
+                if let Some(sc) = superclass {
+                    write!(f, " < {}", sc.lexeme)?;
+                }
+                for m in methods {
+                    write!(f, " {}", m)?;
+                }
+                write!(f, ")")
+            }
+            Stmt::Expression { expr } => write!(f, "; {}", expr),
             Stmt::Function { value } => write!(f, "{}", value),
             Stmt::If {
                 condition,
@@ -60,8 +69,11 @@ impl fmt::Display for Stmt {
                 Some(e) => write!(f, "(return {})", e),
                 None => write!(f, "(return)"),
             },
-            Stmt::Var { name, value } => todo!(),
-            Stmt::While { condition, body } => todo!(),
+            Stmt::Var { name, value } => match value {
+                Some(v) => write!(f, "(var {} = {})", name.lexeme, v),
+                None => write!(f, "(var {})", name.lexeme),
+            },
+            Stmt::While { condition, body } => write!(f, "(while {} {})", condition, body),
         }
     }
 }
@@ -455,6 +467,122 @@ mod tests {
                 }
             ),
             "(fun foo(bar) (print bar))"
+        )
+    }
+
+    #[test]
+    fn print_expression_stmt() {
+        assert_eq!(
+            format!(
+                "{}",
+                Stmt::Expression {
+                    expr: Expr::Variable { name: token("foo") }
+                }
+            ),
+            "; foo"
+        )
+    }
+
+    #[test]
+    fn print_var_unassigned() {
+        assert_eq!(
+            format!(
+                "{}",
+                Stmt::Var {
+                    name: token("foo"),
+                    value: None
+                }
+            ),
+            "(var foo)"
+        )
+    }
+
+    #[test]
+    fn print_var_assigned() {
+        assert_eq!(
+            format!(
+                "{}",
+                Stmt::Var {
+                    name: token("foo"),
+                    value: Some(Expr::Literal {
+                        value: Literal::Number(1f64)
+                    })
+                }
+            ),
+            "(var foo = 1.0)"
+        )
+    }
+
+    #[test]
+    fn print_class_super() {
+        assert_eq!(
+            format!(
+                "{}",
+                Stmt::Class {
+                    name: token("foo"),
+                    superclass: Some(token("bar")),
+                    methods: vec![Function {
+                        name: token("baz"),
+                        params: vec![token("bar")],
+                        body: vec![Stmt::Print {
+                            expr: Expr::Variable { name: token("bar") }
+                        }]
+                    }]
+                }
+            ),
+            "(class foo < bar (fun baz(bar) (print bar)))"
+        )
+    }
+
+    #[test]
+    fn print_class_no_super() {
+        assert_eq!(
+            format!(
+                "{}",
+                Stmt::Class {
+                    name: token("foo"),
+                    superclass: None,
+                    methods: vec![Function {
+                        name: token("baz"),
+                        params: vec![token("bar")],
+                        body: vec![Stmt::Print {
+                            expr: Expr::Variable { name: token("bar") }
+                        }]
+                    }]
+                }
+            ),
+            "(class foo (fun baz(bar) (print bar)))"
+        )
+    }
+
+    #[test]
+    fn print_while() {
+        assert_eq!(
+            format!(
+                "{}",
+                Stmt::While {
+                    condition: Expr::Binary {
+                        left: Box::new(Expr::Literal {
+                            value: Literal::Number(1f64)
+                        }),
+                        op: Token {
+                            token_type: TokenType::Less,
+                            lexeme: "<".to_string(),
+                            literal: None,
+                            line: 0
+                        },
+                        right: Box::new(Expr::Literal {
+                            value: Literal::Number(2f64)
+                        })
+                    },
+                    body: Box::new(Stmt::Print {
+                        expr: Expr::Literal {
+                            value: Literal::Str("Hello world".to_string())
+                        }
+                    })
+                }
+            ),
+            "(while (1.0 < 2.0) (print \"Hello world\"))"
         )
     }
 }
