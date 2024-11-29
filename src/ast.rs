@@ -20,7 +20,7 @@ pub enum Stmt {
     If {
         condition: Expr,
         then_branch: Box<Stmt>,
-        else_branch: Box<Stmt>,
+        else_branch: Option<Box<Stmt>>,
     },
     Print {
         expr: Expr,
@@ -42,7 +42,15 @@ pub enum Stmt {
 impl fmt::Display for Stmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Stmt::Block { statements } => todo!(),
+            Stmt::Block { statements } => write!(
+                f,
+                "(block {})",
+                statements
+                    .iter()
+                    .map(|s| { s.to_string() })
+                    .collect::<Vec<String>>()
+                    .join(" ")
+            ),
             Stmt::Class {
                 name,
                 superclass,
@@ -63,7 +71,10 @@ impl fmt::Display for Stmt {
                 condition,
                 then_branch,
                 else_branch,
-            } => todo!(),
+            } => match else_branch {
+                Some(eb) => write!(f, "(if-else {} {} {})", condition, then_branch, eb),
+                None => write!(f, "(if {} {})", condition, then_branch),
+            },
             Stmt::Print { expr } => write!(f, "(print {})", expr),
             Stmt::Return { keyword: _, expr } => match expr {
                 Some(e) => write!(f, "(return {})", e),
@@ -583,6 +594,90 @@ mod tests {
                 }
             ),
             "(while (1.0 < 2.0) (print \"Hello world\"))"
+        )
+    }
+
+    #[test]
+    fn print_block() {
+        assert_eq!(
+            format!(
+                "{}",
+                Stmt::Block {
+                    statements: vec![Stmt::Var {
+                        name: token("foo"),
+                        value: None
+                    }]
+                }
+            ),
+            "(block (var foo))"
+        )
+    }
+
+    #[test]
+    fn print_if() {
+        assert_eq!(
+            format!(
+                "{}",
+                Stmt::If {
+                    condition: Expr::Binary {
+                        left: Box::new(Expr::Literal {
+                            value: Literal::Number(1f64)
+                        }),
+                        op: Token {
+                            token_type: TokenType::Less,
+                            lexeme: "<".to_string(),
+                            literal: None,
+                            line: 0
+                        },
+                        right: Box::new(Expr::Literal {
+                            value: Literal::Number(2f64)
+                        })
+                    },
+                    then_branch: Box::new(Stmt::Print {
+                        expr: Expr::Literal {
+                            value: Literal::Str("Hello world".to_string())
+                        }
+                    }),
+                    else_branch: None
+                }
+            ),
+            "(if (1.0 < 2.0) (print \"Hello world\"))"
+        )
+    }
+
+    #[test]
+    fn print_if_else() {
+        assert_eq!(
+            format!(
+                "{}",
+                Stmt::If {
+                    condition: Expr::Binary {
+                        left: Box::new(Expr::Literal {
+                            value: Literal::Number(1f64)
+                        }),
+                        op: Token {
+                            token_type: TokenType::Less,
+                            lexeme: "<".to_string(),
+                            literal: None,
+                            line: 0
+                        },
+                        right: Box::new(Expr::Literal {
+                            value: Literal::Number(2f64)
+                        })
+                    },
+                    then_branch: Box::new(Stmt::Print {
+                        expr: Expr::Literal {
+                            value: Literal::Str("Hello world".to_string())
+                        }
+                    }),
+                    else_branch: Some(Box::new(Stmt::Print {
+                        expr: Expr::Literal {
+                            value: Literal::Str("Hi world".to_string())
+                        }
+                    }))
+                }
+            ),
+            "(if-else (1.0 < 2.0) (print \"Hello world\") (print \"Hi world\"))"
         )
     }
 }
