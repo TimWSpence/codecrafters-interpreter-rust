@@ -1,8 +1,8 @@
-use super::ast::Ast;
+use super::ast::*;
 use super::scanner::Token;
 use anyhow::Result;
 
-pub fn parse(tokens: &[Token]) -> Result<Ast> {
+pub fn parse(tokens: &[Token]) -> Result<Expr> {
     todo!("")
 }
 

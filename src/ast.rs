@@ -1,4 +1,6 @@
-use super::scanner::Token;
+use core::fmt;
+
+use super::scanner::{Token, TokenType};
 
 pub enum Stmt {
     Block {
@@ -97,7 +99,184 @@ pub enum Expr {
     },
 }
 
+impl fmt::Display for Expr {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Expr::Assign { name, value } => write!(f, "({} = {})", name.lexeme, value),
+            Expr::Binary { left, op, right } => write!(f, "({} {} {})", left, op.lexeme, right),
+            Expr::Call {
+                callee,
+                paren,
+                args,
+            } => write!(
+                f,
+                "(call {} {})",
+                callee,
+                args.iter()
+                    .map(|a| { a.to_string() })
+                    .collect::<Vec<String>>()
+                    .join(" ")
+            ),
+            Expr::Get { object, name } => write!(f, "({} . {})", object, name.lexeme),
+            Expr::Grouping { expr } => write!(f, "(group {})", expr),
+            Expr::Literal { value } => write!(f, "{}", value),
+            Expr::Logical { left, op, right } => todo!(),
+            Expr::Set {
+                object,
+                name,
+                value,
+            } => todo!(),
+            Expr::Super { keyword, method } => todo!(),
+            Expr::This { keyword } => write!(f, "this"),
+            Expr::Unary { op, expr } => write!(f, "({} {})", op.lexeme, expr),
+            Expr::Variable { name } => write!(f, "{}", name.lexeme),
+        }
+    }
+}
+
+#[derive(Debug, PartialEq)]
 pub enum Literal {
-    Number(f64),
     Str(String),
+    Number(f64),
+}
+
+impl fmt::Display for Literal {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Literal::Str(s) => write!(f, "\"{}\"", s),
+            Literal::Number(n) => write!(f, "{}", n),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn num_literal(value: f64) -> Token {
+        Token {
+            token_type: TokenType::Number,
+            lexeme: format!("{}", value),
+            literal: Some(Literal::Number(value)),
+            line: 0,
+        }
+    }
+
+    fn token(name: &str) -> Token {
+        Token {
+            token_type: TokenType::Identifier,
+            lexeme: name.to_string(),
+            literal: None,
+            line: 0,
+        }
+    }
+
+    #[test]
+    fn print_assign() {
+        assert_eq!(
+            format!(
+                "{}",
+                Expr::Assign {
+                    name: token("foo"),
+                    value: Box::new(Expr::Literal {
+                        value: Literal::Str("bar".to_string())
+                    })
+                }
+            ),
+            "(foo = \"bar\")"
+        )
+    }
+
+    #[test]
+    fn print_binary() {
+        assert_eq!(
+            format!(
+                "{}",
+                Expr::Binary {
+                    left: Box::new(Expr::Literal {
+                        value: Literal::Number(1f64)
+                    }),
+                    op: Token {
+                        token_type: TokenType::Less,
+                        lexeme: "<".to_string(),
+                        literal: None,
+                        line: 0
+                    },
+                    right: Box::new(Expr::Literal {
+                        value: Literal::Number(2f64)
+                    })
+                }
+            ),
+            "(1 < 2)"
+        )
+    }
+
+    #[test]
+    fn print_get() {
+        assert_eq!(
+            format!(
+                "{}",
+                Expr::Get {
+                    object: Box::new(Expr::Variable {
+                        name: Token {
+                            token_type: TokenType::Identifier,
+                            lexeme: "foo".to_string(),
+                            literal: None,
+                            line: 0
+                        }
+                    }),
+                    name: token("bar")
+                }
+            ),
+            "(foo . bar)"
+        )
+    }
+
+    #[test]
+    fn print_this() {
+        assert_eq!(
+            format!(
+                "{}",
+                Expr::This {
+                    keyword: token("this")
+                }
+            ),
+            "this"
+        )
+    }
+
+    #[test]
+    fn print_group() {
+        assert_eq!(
+            format!(
+                "{}",
+                Expr::Literal {
+                    value: Literal::Number(1f64)
+                }
+            ),
+            "(group 1)"
+        )
+    }
+
+    #[test]
+    fn print_call() {
+        assert_eq!(
+            format!(
+                "{}",
+                Expr::Call {
+                    callee: Box::new(Expr::Variable { name: token("foo") }),
+                    paren: token("()"),
+                    args: vec![
+                        Expr::Literal {
+                            value: Literal::Number(1f64)
+                        },
+                        Expr::Literal {
+                            value: Literal::Str("bar".to_string())
+                        }
+                    ]
+                }
+            ),
+            "(call foo 1 \"bar\")"
+        )
+    }
 }

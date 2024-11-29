@@ -1,3 +1,4 @@
+use super::ast::Literal;
 use anyhow::anyhow;
 use lazy_static::lazy_static;
 use std::cell::RefCell;
@@ -97,21 +98,6 @@ impl fmt::Display for TokenType {
             TokenType::Var => write!(f, "VAR"),
             TokenType::While => write!(f, "WHILE"),
             TokenType::EOF => write!(f, "EOF"),
-        }
-    }
-}
-
-#[derive(Debug, PartialEq)]
-pub enum Literal {
-    Str(String),
-    Number(f64),
-}
-
-impl fmt::Display for Literal {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Literal::Str(s) => write!(f, "{}", s),
-            Literal::Number(n) => write!(f, "{}", n),
         }
     }
 }
