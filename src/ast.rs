@@ -8,7 +8,7 @@ pub enum Stmt {
     },
     Class {
         name: Token,
-        superclass: Variable,
+        superclass: Token,
         methods: Vec<Function>,
     },
     Expression {
@@ -27,10 +27,11 @@ pub enum Stmt {
     },
     Return {
         keyword: Token,
-        expr: Expr,
+        expr: Option<Expr>,
     },
     Var {
-        value: Variable,
+        name: Token,
+        value: Option<Expr>,
     },
     While {
         condition: Expr,
@@ -38,14 +39,57 @@ pub enum Stmt {
     },
 }
 
-pub struct Variable {
-    name: Token,
-    expr: Expr,
+impl fmt::Display for Stmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Stmt::Block { statements } => todo!(),
+            Stmt::Class {
+                name,
+                superclass,
+                methods,
+            } => todo!(),
+            Stmt::Expression { expr } => todo!(),
+            Stmt::Function { value } => write!(f, "{}", value),
+            Stmt::If {
+                condition,
+                then_branch,
+                else_branch,
+            } => todo!(),
+            Stmt::Print { expr } => write!(f, "(print {})", expr),
+            Stmt::Return { keyword: _, expr } => match expr {
+                Some(e) => write!(f, "(return {})", e),
+                None => write!(f, "(return)"),
+            },
+            Stmt::Var { name, value } => todo!(),
+            Stmt::While { condition, body } => todo!(),
+        }
+    }
 }
+
 pub struct Function {
     name: Token,
     params: Vec<Token>,
     body: Vec<Stmt>,
+}
+
+impl fmt::Display for Function {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "(fun {}({}) {})",
+            self.name.lexeme,
+            self.params
+                .iter()
+                .map(|p| { p.lexeme.clone() })
+                .collect::<Vec<String>>()
+                .join(" "),
+            self.body
+                .iter()
+                .map(|s| { s.to_string() })
+                .collect::<Vec<String>>()
+                .join("")
+        )
+    }
 }
 
 pub enum Expr {
@@ -347,6 +391,70 @@ mod tests {
                 }
             ),
             "(= foo bar 1.0)"
+        )
+    }
+
+    #[test]
+    fn print_print() {
+        assert_eq!(
+            format!(
+                "{}",
+                Stmt::Print {
+                    expr: Expr::Literal {
+                        value: Literal::Number(1f64)
+                    }
+                }
+            ),
+            "(print 1.0)"
+        )
+    }
+
+    #[test]
+    fn print_return_nothing() {
+        assert_eq!(
+            format!(
+                "{}",
+                Stmt::Return {
+                    keyword: token("return"),
+                    expr: None
+                }
+            ),
+            "(return)"
+        )
+    }
+
+    #[test]
+    fn print_return_something() {
+        assert_eq!(
+            format!(
+                "{}",
+                Stmt::Return {
+                    keyword: token("return"),
+                    expr: Some(Expr::Literal {
+                        value: Literal::Number(1f64)
+                    })
+                }
+            ),
+            "(return 1.0)"
+        )
+    }
+
+    #[test]
+    fn print_function() {
+        assert_eq!(
+            format!(
+                "{}",
+                Stmt::Function {
+                    value: Function {
+                        name: token("foo"),
+                        params: vec![token("bar")],
+                        body: vec![Stmt::Print {
+                            expr: Expr::Variable { name: token("bar") }
+                        }]
+                    }
+                }
+            ),
+            "(fun foo(bar) (print bar))"
         )
     }
 }
