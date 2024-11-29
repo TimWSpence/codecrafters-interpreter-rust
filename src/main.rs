@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use clap::*;
 use std::fs;
 
@@ -33,6 +33,22 @@ fn main() -> Result<()> {
                 Ok(())
             }
         }
+        Commands::Parse { file } => {
+            let input = fs::read_to_string(file).unwrap_or_else(|_| {
+                eprintln!("Failed to read file {}", file);
+                String::new()
+            });
+
+            let tokens = match scanner::scan(&input) {
+                Err(_) => Err(anyhow!("Could not lex {}", input)),
+                Ok(ts) => Ok(ts),
+            }?;
+
+            let p = parser::parse(&tokens)?;
+
+            println!("{}", p);
+            Ok(())
+        }
     }
 }
 
@@ -47,4 +63,5 @@ struct Cli {
 #[derive(Subcommand)]
 enum Commands {
     Tokenize { file: String },
+    Parse { file: String },
 }
