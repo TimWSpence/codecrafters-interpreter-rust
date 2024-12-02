@@ -31,17 +31,12 @@ impl Parser {
     fn primary(&self) -> Result<Expr> {
         let c = self.current();
         match c {
-            Some(c) => match c.token_type {
-                TokenType::True => Ok(Expr::Literal {
-                    value: Literal::Boolean(true),
-                }),
-                TokenType::False => Ok(Expr::Literal {
-                    value: Literal::Boolean(false),
-                }),
-                TokenType::Nil => Ok(Expr::Literal {
-                    value: Literal::Nil,
-                }),
-                t => Err(anyhow!("Couldn't parse primary - found {}", t)),
+            Some(c) => match &c.literal {
+                Some(l) => Ok(Expr::Literal { value: l.clone() }),
+                None => Err(anyhow!(
+                    "Couldn't parse primary - expected literal but got {}",
+                    c
+                )),
             },
             None => Err(anyhow!("Couldn't parse primary - reached EOF")),
         }
@@ -69,7 +64,12 @@ mod tests {
     #[test]
     fn parse_true() {
         assert_eq!(
-            parse(vec![token(TokenType::True, "true", None)]).unwrap(),
+            parse(vec![token(
+                TokenType::True,
+                "true",
+                Some(Literal::Boolean(true))
+            )])
+            .unwrap(),
             Expr::Literal {
                 value: Literal::Boolean(true)
             }
@@ -79,7 +79,12 @@ mod tests {
     #[test]
     fn parse_false() {
         assert_eq!(
-            parse(vec![token(TokenType::False, "false", None)]).unwrap(),
+            parse(vec![token(
+                TokenType::False,
+                "false",
+                Some(Literal::Boolean(false))
+            )])
+            .unwrap(),
             Expr::Literal {
                 value: Literal::Boolean(false)
             }
@@ -89,9 +94,24 @@ mod tests {
     #[test]
     fn parse_nil() {
         assert_eq!(
-            parse(vec![token(TokenType::Nil, "nil", None)]).unwrap(),
+            parse(vec![token(TokenType::Nil, "nil", Some(Literal::Nil))]).unwrap(),
             Expr::Literal {
                 value: Literal::Nil
+            }
+        )
+    }
+
+    #[test]
+    fn parse_number() {
+        assert_eq!(
+            parse(vec![token(
+                TokenType::Number,
+                "123.45",
+                Some(Literal::Number(123.45f64))
+            )])
+            .unwrap(),
+            Expr::Literal {
+                value: Literal::Number(123.45f64)
             }
         )
     }
