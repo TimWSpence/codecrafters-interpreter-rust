@@ -213,7 +213,7 @@ pub enum Literal {
 impl fmt::Display for Literal {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Literal::Str(s) => write!(f, "\"{}\"", s),
+            Literal::Str(s) => write!(f, "{}", s),
             Literal::Number(n) => {
                 let mut s = n.to_string();
                 if !s.contains('.') {
