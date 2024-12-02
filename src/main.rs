@@ -1,10 +1,13 @@
 use anyhow::{anyhow, Result};
+use clap::Parser as P;
 use clap::*;
 use std::fs;
 
 mod ast;
 mod parser;
 mod scanner;
+
+use parser::Parser;
 
 fn main() -> Result<()> {
     let cli = Cli::parse();
@@ -44,7 +47,8 @@ fn main() -> Result<()> {
                 Ok(ts) => Ok(ts),
             }?;
 
-            let p = parser::parse(&tokens)?;
+            let parser = Parser::new(tokens);
+            let p = parser.parse()?;
 
             println!("{}", p);
             Ok(())

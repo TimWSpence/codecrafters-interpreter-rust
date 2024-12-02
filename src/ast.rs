@@ -115,6 +115,7 @@ impl fmt::Display for Function {
     }
 }
 
+#[derive(Debug, PartialEq)]
 pub enum Expr {
     Assign {
         name: Token,
@@ -205,6 +206,8 @@ impl fmt::Display for Expr {
 pub enum Literal {
     Str(String),
     Number(f64),
+    Boolean(bool),
+    Nil,
 }
 
 impl fmt::Display for Literal {
@@ -218,6 +221,8 @@ impl fmt::Display for Literal {
                 }
                 write!(f, "{}", s)
             }
+            Literal::Boolean(b) => write!(f, "{}", b),
+            Literal::Nil => write!(f, "nil"),
         }
     }
 }

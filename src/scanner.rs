@@ -118,14 +118,7 @@ impl fmt::Display for Token {
             self.token_type,
             self.lexeme,
             match &self.literal {
-                Some(Literal::Str(s)) => s.to_string(),
-                Some(Literal::Number(n)) => {
-                    let mut s = n.to_string();
-                    if !s.contains('.') {
-                        s.push_str(".0");
-                    }
-                    s
-                }
+                Some(l) => l.to_string(),
                 None => "null".to_string(),
             }
         )
