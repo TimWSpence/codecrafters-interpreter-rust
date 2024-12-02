@@ -126,4 +126,19 @@ mod tests {
             }
         )
     }
+
+    #[test]
+    fn parse_string() {
+        assert_eq!(
+            parse(vec![token(
+                TokenType::String,
+                "foo",
+                Some(Literal::Str("foo".to_string()))
+            )])
+            .unwrap(),
+            Expr::Literal {
+                value: Literal::Str("foo".to_string())
+            }
+        )
+    }
 }

@@ -187,10 +187,7 @@ impl fmt::Display for Expr {
             ),
             Expr::Get { object, name } => write!(f, "(. {} {})", object, name.lexeme),
             Expr::Grouping { expr } => write!(f, "(group {})", expr),
-            Expr::Literal { value } => match value {
-                Literal::Str(s) => write!(f, "\"{}\"", s),
-                _ => write!(f, "{}", value),
-            },
+            Expr::Literal { value } => write!(f, "{}", value),
             Expr::Logical { left, op, right } => write!(f, "({} {} {})", left, op.lexeme, right),
             Expr::Set {
                 object,
