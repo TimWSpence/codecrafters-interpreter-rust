@@ -31,13 +31,24 @@ impl Parser {
     fn primary(&self) -> Result<Expr> {
         let c = self.current();
         match c {
-            Some(c) => match &c.literal {
-                Some(l) => Ok(Expr::Literal { value: l.clone() }),
-                None => Err(anyhow!(
-                    "Couldn't parse primary - expected literal but got {}",
-                    c
-                )),
-            },
+            Some(c) => {
+                if let Some(l) = &c.literal {
+                    Ok(Expr::Literal { value: l.clone() })
+                } else {
+                    match c.token_type {
+                        TokenType::True => Ok(Expr::Literal {
+                            value: Literal::Boolean(true),
+                        }),
+                        TokenType::False => Ok(Expr::Literal {
+                            value: Literal::Boolean(false),
+                        }),
+                        TokenType::Nil => Ok(Expr::Literal {
+                            value: Literal::Nil,
+                        }),
+                        _ => Err(anyhow!("Couldn't parse primary - unexpected token {}", c)),
+                    }
+                }
+            }
             None => Err(anyhow!("Couldn't parse primary - reached EOF")),
         }
     }

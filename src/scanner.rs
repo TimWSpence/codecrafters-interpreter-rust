@@ -248,16 +248,7 @@ pub fn scan(input: &str) -> Result<Vec<Token>, Vec<Token>> {
                     }
                 }
                 match KEYWORDS.get(&value) {
-                    Some(t) => match t {
-                        TokenType::True => {
-                            add_token(*t, &value, Some(Literal::Boolean(true)), line)
-                        }
-                        TokenType::False => {
-                            add_token(*t, &value, Some(Literal::Boolean(false)), line)
-                        }
-                        TokenType::Nil => add_token(*t, &value, Some(Literal::Nil), line),
-                        _ => add_token(*t, &value, None, line),
-                    },
+                    Some(t) => add_token(*t, &value, None, line),
                     _ => add_token(TokenType::Identifier, &value, None, line),
                 }
             }
@@ -707,10 +698,7 @@ mod tests {
     fn keyword_false() {
         assert_eq!(
             scan("false").unwrap(),
-            vec![
-                token(TokenType::False, "false", Some(Literal::Boolean(false))),
-                eof()
-            ]
+            vec![token(TokenType::False, "false", None), eof()]
         )
     }
 
@@ -742,7 +730,7 @@ mod tests {
     fn keyword_nil() {
         assert_eq!(
             scan("nil").unwrap(),
-            vec![token(TokenType::Nil, "nil", Some(Literal::Nil)), eof()]
+            vec![token(TokenType::Nil, "nil", None), eof()]
         )
     }
 
@@ -790,10 +778,7 @@ mod tests {
     fn keyword_true() {
         assert_eq!(
             scan("true").unwrap(),
-            vec![
-                token(TokenType::True, "true", Some(Literal::Boolean(true))),
-                eof()
-            ]
+            vec![token(TokenType::True, "true", None), eof()]
         )
     }
 
