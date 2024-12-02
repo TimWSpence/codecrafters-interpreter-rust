@@ -1,3 +1,5 @@
+use std::any;
+
 use super::ast::*;
 use super::scanner::{Token, TokenType};
 use anyhow::{anyhow, Result};
@@ -12,23 +14,35 @@ impl Parser {
         Parser { tokens, idx: 0 }
     }
 
-    pub fn parse(&self) -> Result<Expr> {
+    pub fn parse(&mut self) -> Result<Expr> {
+        self.expression()
+    }
+
+    fn expression(&mut self) -> Result<Expr> {
+        self.equality()
+    }
+
+    fn equality(&mut self) -> Result<Expr> {
+        self.comparison()
+    }
+
+    fn comparison(&mut self) -> Result<Expr> {
+        self.term()
+    }
+
+    fn term(&mut self) -> Result<Expr> {
+        self.factor()
+    }
+
+    fn factor(&mut self) -> Result<Expr> {
+        self.unary()
+    }
+
+    fn unary(&mut self) -> Result<Expr> {
         self.primary()
     }
 
-    fn current(&self) -> Option<&Token> {
-        self.tokens.get(self.idx)
-    }
-
-    fn next(&self) -> Option<&Token> {
-        self.tokens.get(self.idx + 1)
-    }
-
-    fn advance(&mut self) {
-        self.idx += 1
-    }
-
-    fn primary(&self) -> Result<Expr> {
+    fn primary(&mut self) -> Result<Expr> {
         let c = self.current();
         match c {
             Some(c) => {
@@ -45,11 +59,48 @@ impl Parser {
                         TokenType::Nil => Ok(Expr::Literal {
                             value: Literal::Nil,
                         }),
+                        TokenType::LeftParen => {
+                            self.advance();
+                            let expr = self.expression()?;
+                            self.advance();
+                            self.consume(
+                                TokenType::RightParen,
+                                "Couldn't find matching right paren",
+                            )?;
+                            Ok(Expr::Grouping {
+                                expr: Box::new(expr),
+                            })
+                        }
                         _ => Err(anyhow!("Couldn't parse primary - unexpected token {}", c)),
                     }
                 }
             }
             None => Err(anyhow!("Couldn't parse primary - reached EOF")),
+        }
+    }
+
+    fn current(&self) -> Option<&Token> {
+        self.tokens.get(self.idx)
+    }
+
+    fn next(&self) -> Option<&Token> {
+        self.tokens.get(self.idx + 1)
+    }
+
+    fn advance(&mut self) {
+        self.idx += 1
+    }
+
+    fn consume(&mut self, expected: TokenType, msg: &'static str) -> Result<()> {
+        match self.current() {
+            Some(c) => {
+                if c.token_type == expected {
+                    Ok(())
+                } else {
+                    Err(anyhow!(msg))
+                }
+            }
+            None => Err(anyhow!(msg)),
         }
     }
 }
@@ -59,7 +110,7 @@ mod tests {
     use super::*;
 
     fn parse(tokens: Vec<Token>) -> Result<Expr> {
-        let parser = Parser::new(tokens);
+        let mut parser = Parser::new(tokens);
         parser.parse()
     }
 
@@ -138,6 +189,23 @@ mod tests {
             .unwrap(),
             Expr::Literal {
                 value: Literal::Str("foo".to_string())
+            }
+        )
+    }
+
+    #[test]
+    fn parse_group() {
+        assert_eq!(
+            parse(vec![
+                token(TokenType::LeftParen, "(", None),
+                token(TokenType::Number, "123", Some(Literal::Number(123f64))),
+                token(TokenType::RightParen, ")", None)
+            ])
+            .unwrap(),
+            Expr::Grouping {
+                expr: Box::new(Expr::Literal {
+                    value: Literal::Number(123f64)
+                })
             }
         )
     }

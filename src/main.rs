@@ -47,7 +47,7 @@ fn main() -> Result<()> {
                 Ok(ts) => Ok(ts),
             }?;
 
-            let parser = Parser::new(tokens);
+            let mut parser = Parser::new(tokens);
             let p = parser.parse()?;
 
             println!("{}", p);

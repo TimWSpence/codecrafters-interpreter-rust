@@ -261,7 +261,7 @@ mod tests {
                     })
                 }
             ),
-            "(foo = \"bar\")"
+            "(foo = bar)"
         )
     }
 
@@ -380,7 +380,7 @@ mod tests {
                     ]
                 }
             ),
-            "(call foo 1.0 \"bar\")"
+            "(call foo 1.0 bar)"
         )
     }
 
@@ -598,7 +598,7 @@ mod tests {
                     })
                 }
             ),
-            "(while (1.0 < 2.0) (print \"Hello world\"))"
+            "(while (1.0 < 2.0) (print Hello world))"
         )
     }
 
@@ -646,7 +646,7 @@ mod tests {
                     else_branch: None
                 }
             ),
-            "(if (1.0 < 2.0) (print \"Hello world\"))"
+            "(if (1.0 < 2.0) (print Hello world))"
         )
     }
 
@@ -682,7 +682,7 @@ mod tests {
                     }))
                 }
             ),
-            "(if-else (1.0 < 2.0) (print \"Hello world\") (print \"Hi world\"))"
+            "(if-else (1.0 < 2.0) (print Hello world) (print Hi world))"
         )
     }
 }
